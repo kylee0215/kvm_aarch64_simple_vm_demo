@@ -12,9 +12,9 @@ PROGRESS = @echo Compiling $<...
 endif
 
 VIRT_CC = aarch64-linux-gnu-gcc
-CC = aarch64-elf-gcc
-OBJDUMP = aarch64-elf-objdump
-OBJCOPY= aarch64-elf-objcopy
+CC = aarch64-linux-gnu-gcc
+OBJDUMP = aarch64-linux-gnu-objdump
+OBJCOPY= aarch64-linux-gnu-objcopy
 SRC_DIR = guest_src
 VIRT_SRC_DIR= virt_src
 ASM_DIR = asm
@@ -33,7 +33,7 @@ RM_DIRS = $(foreach dir,$(1),rm -rf $(dir)$(EOL))
 DEPEND_FLAGS = -MD -MF $@.d
 CPPFLAGS_EXTRA += -ffunction-sections -fdata-sections -nostdinc -fno-builtin
 CPPFLAGS = $(DEFINES) $(INCLUDES) $(DEPEND_FLAGS) $(CPPFLAGS_EXTRA)
-CFLAGS = $(DEBUG_FLAGS) -O$(OPT_LEVEL)
+CFLAGS = $(DEBUG_FLAGS) -O$(OPT_LEVEL) -fno-stack-protector
 ASFLAGS = $(DEBUG_FLAGS)
 LDFLAGS_EXTRA += -nostdlib
 LDFLAGS = -Tgcc.ld -Wl,--gc-sections,-Map=$(APP).map $(LDFLAGS_EXTRA)
@@ -50,7 +50,8 @@ DEP_FILES := $(OBJ_FILES:%=%.d) $(VIRT_OBJ_FILES:%=%.d)
 .phony: all clean
 
 all: $(APP) $(VIRT)
-	cp $(APP).bin $(VIRT) ../../share
+	mkdir ./share
+	cp $(APP).bin $(VIRT) ./share
 
 $(APP): $(OBJ_FILES) gcc.ld
 	@echo Linking $@
@@ -65,6 +66,7 @@ $(VIRT): $(VIRT_OBJ_FILES)
 	@echo Done.
 
 clean:
+	$(call RM_DIRS,"./share")
 	$(call RM_DIRS,$(OBJ_DIR))
 	$(call RM_DIRS,$(VIRT_OBJ_DIR))
 	$(call RM_FILES,$(APP) $(VIRT) $(APP).map $(APP).map $(APP).bin $(APP).dump)
